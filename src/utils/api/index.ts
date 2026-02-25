@@ -1,443 +1,76 @@
-import { UserAccount, User, Transaction, Card } from '../../types';
+Así que tu frontend hace peticiones a rutas que tu backend no conoce → 404 y errores de lógica.
 
-const myInit = (method = 'GET', token?: string) => {
-  return {
+---
+
+## ✅ Cómo debe lucir tu `api.ts` o util de conexiones
+
+Reemplaza todo tu código de utils para usar los endpoints reales.  
+Te dejo una versión ya corregida y alineada con tu backend:
+
+```ts
+const baseUrl = import.meta.env.VITE_API_URL;
+
+// función genérica para todos los requests
+const request = async (endpoint: string, method: string, token?: string, body?: any) => {
+  const response = await fetch(`${baseUrl}${endpoint}`, {
     method,
     headers: {
       'Content-Type': 'application/json',
-      Authorization: token ? `Bearer ${token}` : '',
+      ...(token && { Authorization: `Bearer ${token}` }),
     },
-    mode: 'cors' as RequestMode,
-    cache: 'default' as RequestCache,
-  };
-};
-
-const myRequest = (endpoint: string, method: string, token?: string) =>
-  new Request(endpoint, myInit(method, token));
-
-const baseUrl = 'https://gatewaydigitalmoney.onrender.com';
-
-const rejectPromise = (response?: Response): Promise<Response> =>
-  Promise.reject({
-    status: (response && response.status) || '00',
-    statusText: (response && response.statusText) || 'Ocurrió un error',
-    err: true,
+    body: body ? JSON.stringify(body) : undefined,
   });
 
-export const login = (email: string, password: string) => {
-  return fetch(myRequest(`${baseUrl}/login`, 'POST'), {
-    body: JSON.stringify({ email, password }),
-  })
-    .then((response) => {
-      if (response.ok) {
-        return response.json();
-      }
-      return rejectPromise(response);
-    })
-    .catch((err) => {
-      console.log(err);
-      return rejectPromise(err);
-    });
-};
-
-export const createAnUser = (user: User) => {
-  return fetch(myRequest(`${baseUrl}/register`, 'POST'), {
-    body: JSON.stringify(user),
-  })
-    .then((response) => {
-      if (response.ok) {
-        return response.json();
-      }
-      return rejectPromise(response);
-    })
-    .then((data) => {
-      createAnAccount(data);
-      return data;
-    })
-    .catch((err) => {
-      console.log(err);
-      return rejectPromise(err);
-    });
-};
-
-export const getUser = (id: string): Promise<User> => {
-  return fetch(myRequest(`${baseUrl}/users/${id}`, 'GET'))
-    .then((response) =>
-      response.ok ? response.json() : rejectPromise(response)
-    )
-    .catch((err) => {
-      console.log(err);
-      return rejectPromise(err);
-    });
-};
-
-export const updateUser = (
-  id: string,
-  data: any,
-  token: string
-): Promise<Response> => {
-  return fetch(myRequest(`${baseUrl}/users/${id}`, 'PATCH', token), {
-    body: JSON.stringify(data),
-  })
-    .then((response) =>
-      response.ok ? response.json() : rejectPromise(response)
-    )
-    .catch((err) => {
-      console.log(err);
-      return rejectPromise(err);
-    });
-};
-
-// TODO: remove this functionality once backend is ready
-const generateCvu = (): string => {
-  let cvu = '';
-  for (let i = 0; i < 22; i++) {
-    cvu += Math.floor(Math.random() * 10);
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw {
+      status: response.status,
+      message: error.message || 'Error en la petición',
+    };
   }
-  return cvu;
+
+  return response.json();
 };
 
-// TODO: remove this functionality once backend is ready
-const generateAlias = (): string => {
-  const words = [
-    'Cuenta',
-    'Personal',
-    'Banco',
-    'Argentina',
-    'Digital',
-    'Money',
-    'House',
-    'Bank',
-    'Account',
-    'Cartera',
-    'Wallet',
-    'Pago',
-    'Pay',
-    'Rapido',
-    'Seguro',
-  ];
-  const length = 3;
-  let alias = '';
-  for (let i = 0; i < length; i++) {
-    alias += words[Math.floor(Math.random() * words.length)];
-    if (i < length - 1) {
-      alias += '.';
-    }
-  }
-  return alias;
-};
+// AUTH
+export const login = (email: string, password: string) =>
+  request(`/auth/login`, 'POST', undefined, { email, password });
 
-// TODO: remove this functionality once backend is ready
-export const createAnAccount = (data: any): Promise<Response> => {
-  const { user, accessToken } = data;
+export const logout = (token: string) =>
+  request(`/auth/logout`, 'POST', token);
 
-  const alias = generateAlias();
-  const cvu = generateCvu();
-  const account = {
-    alias,
-    cvu,
-    balance: 0,
-    name: `${user.firstName} ${user.lastName}`,
-  };
+// USERS
+export const registerUser = (user: any) =>
+  request(`/users/register`, 'POST', undefined, user);
 
-  return fetch(
-    myRequest(`${baseUrl}/users/${user.id}/accounts`, 'POST', accessToken),
-    {
-      body: JSON.stringify(account),
-    }
-  ).then((response) =>
-    response.ok ? response.json() : rejectPromise(response)
-  );
-};
+export const getUser = (userId: string, token: string) =>
+  request(`/users/${userId}`, 'GET', token);
 
-export const getAccount = (id: string, token: string): Promise<UserAccount> => {
-  return fetch(myRequest(`${baseUrl}/users/${id}/accounts`, 'GET', token), {})
-    .then((response) => {
-      if (response.ok) {
-        return response.json().then((account) => account[0]);
-      }
-      return rejectPromise(response);
-    })
-    .catch((err) => {
-      console.log(err);
-      return rejectPromise(err);
-    });
-};
+export const updateUser = (userId: string, data: any, token: string) =>
+  request(`/users/${userId}`, 'PUT', token, data);
 
-export const getAccounts = (): Promise<UserAccount[]> => {
-  return fetch(myRequest(`${baseUrl}/accounts`, 'GET'))
-    .then((response) =>
-      response.ok ? response.json() : rejectPromise(response)
-    )
-    .catch((err) => {
-      console.log(err);
-      return rejectPromise(err);
-    });
-};
+// ACCOUNT
+export const getAccount = (accountId: string, token: string) =>
+  request(`/accounts/${accountId}`, 'GET', token);
 
-export const updateAccount = (
-  id: string,
-  data: any,
-  token: string
-): Promise<Response> => {
-  return fetch(myRequest(`${baseUrl}/users/${id}/accounts/1`, 'PATCH', token), {
-    body: JSON.stringify(data),
-  })
-    .then((response) =>
-      response.ok ? response.json() : rejectPromise(response)
-    )
-    .catch((err) => {
-      console.log(err);
-      return rejectPromise(err);
-    });
-};
+export const getAccountTransactions = (accountId: string, token: string) =>
+  request(`/accounts/${accountId}/transactions`, 'GET', token);
 
-export const getUserActivities = (
-  userId: string,
-  token: string,
-  limit?: number
-): Promise<Transaction[]> => {
-  return fetch(
-    myRequest(
-      `${baseUrl}/users/${userId}/activities${limit ? `?_limit=${limit}` : ''}`,
-      'GET',
-      token
-    )
-  )
-    .then((response) => {
-      if (response.ok) {
-        return response.json();
-      }
-      return rejectPromise(response);
-    })
-    .catch((err) => {
-      console.log(err);
-      return rejectPromise(err);
-    });
-};
+export const createCardForAccount = (accountId: string, card: any, token: string) =>
+  request(`/accounts/${accountId}/cards`, 'POST', token, card);
 
-export const getUserActivity = (
-  userId: string,
-  activityId: string,
-  token: string
-): Promise<Transaction> => {
-  return fetch(
-    myRequest(
-      `${baseUrl}/users/${userId}/activities/${activityId}`,
-      'GET',
-      token
-    )
-  )
-    .then((response) => {
-      if (response.ok) {
-        return response.json();
-      }
-      return rejectPromise(response);
-    })
-    .catch((err) => {
-      console.log(err);
-      return rejectPromise(err);
-    });
-};
-
-export const getUserCards = (
-  userId: string,
-  token: string
-): Promise<Card[]> => {
-  return fetch(myRequest(`${baseUrl}/users/${userId}/cards`, 'GET', token))
-    .then((response) => {
-      if (response.ok) {
-        return response.json();
-      }
-      return rejectPromise(response);
-    })
-    .catch((err) => {
-      console.log(err);
-      return rejectPromise(err);
-    });
-};
-
-export const getUserCard = (userId: string, cardId: string): Promise<Card> => {
-  return fetch(myRequest(`${baseUrl}/users/${userId}/cards/${cardId}`, 'GET'))
-    .then((response) => {
-      if (response.ok) {
-        return response.json();
-      }
-      return rejectPromise(response);
-    })
-    .catch((err) => {
-      console.log(err);
-      return rejectPromise(err);
-    });
-};
-
-export const deleteUserCard = (
-  userId: string,
+export const deleteCardForAccount = (
+  accountId: string,
   cardId: string,
   token: string
-): Promise<Response> => {
-  return fetch(
-    myRequest(`${baseUrl}/users/${userId}/cards/${cardId}`, 'DELETE', token)
-  )
-    .then((response) => {
-      if (response.ok) {
-        return response.json();
-      }
-      return rejectPromise(response);
-    })
-    .catch((err) => {
-      console.log(err);
-      return rejectPromise(err);
-    });
-};
+) => request(`/accounts/${accountId}/cards/${cardId}`, 'DELETE', token);
 
-export const createUserCard = (
-  userId: string,
-  card: any,
+// TRANSFERS / ACTIVITY
+export const createTransfer = (
+  accountId: string,
+  transferData: any,
   token: string
-): Promise<Response> => {
-  return fetch(myRequest(`${baseUrl}/users/${userId}/cards`, 'POST', token), {
-    body: JSON.stringify(card),
-  })
-    .then((response) =>
-      response.ok ? response.json() : rejectPromise(response)
-    )
-    .catch((err) => {
-      console.log(err);
-      return rejectPromise(err);
-    });
-};
+) => request(`/accounts/${accountId}/transfers`, 'POST', token, transferData);
 
-// TODO: edit when backend is ready
-export const createDepositActivity = (
-  userId: string,
-  amount: number,
-  token: string
-) => {
-  const maxAmount = 30000;
-  if (amount > maxAmount) return rejectPromise();
-
-  const activity = {
-    amount,
-    type: 'Deposit',
-    description: 'Depósito con tarjeta',
-    dated: new Date(), // date must be genarated in backend
-  };
-
-  return fetch(
-    myRequest(`${baseUrl}/users/${userId}/activities`, 'POST', token),
-    {
-      body: JSON.stringify(activity),
-    }
-  )
-    .then((response) =>
-      response.ok ? response.json() : rejectPromise(response)
-    )
-    .then((data) => {
-      depositMoney(data.amount, userId, token);
-    })
-    .catch((err) => {
-      console.log(err);
-      return rejectPromise(err);
-    });
-};
-
-// TODO: remove when backend is ready
-const depositMoney = (amount: number, userId: string, token: string) => {
-  return getAccount(userId, token)
-    .then((account) => {
-      const newBalance = account.balance + amount;
-      const accountId = account.id;
-      return {
-        newBalance,
-        accountId,
-      };
-    })
-    .then(({ newBalance, accountId }) => {
-      fetch(
-        myRequest(
-          `${baseUrl}/users/${userId}/accounts/${accountId}`,
-          'PATCH',
-          token
-        ),
-        {
-          body: JSON.stringify({ balance: newBalance }),
-        }
-      )
-        .then((response) =>
-          response.ok ? response.json() : rejectPromise(response)
-        )
-        .catch((err) => {
-          console.log(err);
-          return rejectPromise(err);
-        });
-    });
-};
-
-// TODO: edit when backend is ready
-export const createTransferActivity = (
-  userId: string,
-  token: string,
-  origin: string,
-  destination: string,
-  amount: number,
-  name?: string
-) => {
-  return fetch(
-    myRequest(`${baseUrl}/users/${userId}/activities`, 'POST', token),
-    {
-      body: JSON.stringify({
-        type: 'Transfer',
-        amount: amount * -1,
-        origin,
-        destination,
-        name,
-        dated: new Date(), // date must be genarated in backend
-      }),
-    }
-  )
-    .then((response) =>
-      response.ok ? response.json() : rejectPromise(response)
-    )
-    .then((response) => {
-      discountMoney(response.amount, userId, token);
-      return response;
-    })
-    .catch((err) => {
-      console.log(err);
-      return rejectPromise(err);
-    });
-};
-
-// TODO: remove when backend is ready
-const discountMoney = (amount: number, userId: string, token: string) => {
-  return getAccount(userId, token)
-    .then((account) => {
-      // amount is negavite
-      const newBalance = account.balance + amount;
-      const accountId = account.id;
-      return {
-        newBalance,
-        accountId,
-      };
-    })
-    .then(({ newBalance, accountId }) => {
-      fetch(
-        myRequest(
-          `${baseUrl}/users/${userId}/accounts/${accountId}`,
-          'PATCH',
-          token
-        ),
-        {
-          body: JSON.stringify({ balance: newBalance }),
-        }
-      )
-        .then((response) =>
-          response.ok ? response.json() : rejectPromise(response)
-        )
-        .catch((err) => {
-          console.log(err);
-          return rejectPromise(err);
-        });
-    });
-};
+export const getAccountActivity = (accountId: string, token: string) =>
+  request(`/accounts/${accountId}/activity`, 'GET', token);
