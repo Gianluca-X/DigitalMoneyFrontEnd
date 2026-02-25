@@ -15,7 +15,7 @@ const myInit = (method = 'GET', token?: string) => {
 const myRequest = (endpoint: string, method: string, token?: string) =>
   new Request(endpoint, myInit(method, token));
 
-const baseUrl = 'http://localhost:3500';
+const baseUrl = 'https://gatewaydigitalmoney.onrender.com';
 
 const rejectPromise = (response?: Response): Promise<Response> =>
   Promise.reject({
