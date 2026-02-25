@@ -1,11 +1,4 @@
-Así que tu frontend hace peticiones a rutas que tu backend no conoce → 404 y errores de lógica.
 
----
-
-## ✅ Cómo debe lucir tu `api.ts` o util de conexiones
-
-Reemplaza todo tu código de utils para usar los endpoints reales.  
-Te dejo una versión ya corregida y alineada con tu backend:
 
 ```ts
 const baseUrl = import.meta.env.VITE_API_URL;
