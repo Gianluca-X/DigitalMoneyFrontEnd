@@ -62,7 +62,11 @@ const LoadMoney = () => {
   const onSubmit: SubmitHandler<any> = (data) => {
     if (user && user.id) {
       setIsSubmiting(true);
-      createDepositActivity(user.id, parseFloat(data.money), token)
+      createDepositActivity(
+            user.id,
+            { amount: parseFloat(data.money) },
+            token
+          )
         .then(() => {
           setIsSubmiting(false);
           navigate(`${ROUTES.HOME}?${SUCCESS}`);

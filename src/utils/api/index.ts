@@ -1,69 +1,139 @@
+import { UserAccount, User, Transaction, Card } from '../../types';
 
+const baseUrl = process.env.REACT_APP_API_URL;
 
-```ts
-const baseUrl = import.meta.env.VITE_API_URL;
+const request = async (
+  path: string,
+  method: string = 'GET',
+  token?: string,
+  body?: any
+) => {
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+  };
 
-// función genérica para todos los requests
-const request = async (endpoint: string, method: string, token?: string, body?: any) => {
-  const response = await fetch(`${baseUrl}${endpoint}`, {
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const response = await fetch(`${baseUrl}${path}`, {
     method,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token && { Authorization: `Bearer ${token}` }),
-    },
+    headers,
     body: body ? JSON.stringify(body) : undefined,
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({}));
-    throw {
-      status: response.status,
-      message: error.message || 'Error en la petición',
-    };
+  const errorData = await response.json();
+  throw new Error(errorData.message || 'Request failed');
   }
+
+  // Si la respuesta es 204 No Content
+  if (response.status === 204) return null;
 
   return response.json();
 };
 
-// AUTH
+/** ------------------ AUTH ------------------ */
 export const login = (email: string, password: string) =>
-  request(`/auth/login`, 'POST', undefined, { email, password });
+  request('/auth/login', 'POST', undefined, { email, password });
 
-export const logout = (token: string) =>
-  request(`/auth/logout`, 'POST', token);
+export const logout = (token: string) => request('/auth/logout', 'POST', token);
 
-// USERS
-export const registerUser = (user: any) =>
-  request(`/users/register`, 'POST', undefined, user);
+/** ------------------ USERS ------------------ */
+export const createUser = (user: User) => request('/users/register', 'POST', undefined, user);
+export const getUser = (id: string, token: string): Promise<User> =>
+  request(`/users/${id}`, 'GET', token);
+export const updateUser = (id: string, data: any, token: string) =>
+  request(`/users/${id}`, 'PUT', token, data);
 
-export const getUser = (userId: string, token: string) =>
-  request(`/users/${userId}`, 'GET', token);
-
-export const updateUser = (userId: string, data: any, token: string) =>
-  request(`/users/${userId}`, 'PUT', token, data);
-
-// ACCOUNT
-export const getAccount = (accountId: string, token: string) =>
+/** ------------------ ACCOUNTS ------------------ */
+export const getAccount = (accountId: string, token: string): Promise<UserAccount> =>
   request(`/accounts/${accountId}`, 'GET', token);
 
-export const getAccountTransactions = (accountId: string, token: string) =>
+export const getAccountTransactions = (accountId: string, token: string): Promise<Transaction[]> =>
   request(`/accounts/${accountId}/transactions`, 'GET', token);
 
-export const createCardForAccount = (accountId: string, card: any, token: string) =>
+export const createCard = (accountId: string, card: any, token: string): Promise<Card> =>
   request(`/accounts/${accountId}/cards`, 'POST', token, card);
 
-export const deleteCardForAccount = (
+export const deleteCard = (accountId: string, cardId: string, token: string) =>
+  request(`/accounts/${accountId}/cards/${cardId}`, 'DELETE', token);
+
+/** ------------------ TRANSACTIONS ------------------ */
+export const createTransfer = (
+  accountId: string,
+  payload: { amount: number; origin: string; destination: string; name?: string },
+  token: string
+) => request(`/accounts/${accountId}/transfers`, 'POST', token, payload);
+
+export const getAccountActivity = (accountId: string, token: string): Promise<Transaction[]> =>
+  request(`/accounts/${accountId}/activity`, 'GET', token);
+/** ------------------ ADAPTERS PARA FRONT ------------------ */
+
+// Obtener cuenta del usuario
+export const getAccounts = async (token: string) => {
+  // si tu backend tiene endpoint para listar cuentas
+  return request(`/accounts`, 'GET', token);
+};
+
+// Actividades del usuario (realmente son actividades de la cuenta)
+export const getUserActivities = async (accountId: string, token: string) => {
+  return request(`/accounts/${accountId}/activity`, 'GET', token);
+};
+
+// Actividad individual
+export const getUserActivity = async (
+  accountId: string,
+  activityId: string,
+  token: string
+) => {
+  const activities = await getUserActivities(accountId, token);
+  return activities.find((a: any) => a.id === activityId);
+};
+
+// Tarjetas del usuario
+export const getUserCards = (accountId: string, token: string) =>
+  request(`/accounts/${accountId}/cards`, 'GET', token);
+
+// Crear tarjeta
+export const createUserCard = (
+  accountId: string,
+  card: any,
+  token: string
+) => createCard(accountId, card, token);
+
+// Eliminar tarjeta
+export const deleteUserCard = (
   accountId: string,
   cardId: string,
   token: string
-) => request(`/accounts/${accountId}/cards/${cardId}`, 'DELETE', token);
+) => deleteCard(accountId, cardId, token);
 
-// TRANSFERS / ACTIVITY
-export const createTransfer = (
+// Depositar dinero
+export const createDepositActivity = (
   accountId: string,
-  transferData: any,
+  payload: { amount: number },
   token: string
-) => request(`/accounts/${accountId}/transfers`, 'POST', token, transferData);
+) => request(`/accounts/${accountId}/deposit`, 'POST', token, payload);
 
-export const getAccountActivity = (accountId: string, token: string) =>
-  request(`/accounts/${accountId}/activity`, 'GET', token);
+// Transferencia
+export const createTransferActivity = (
+  accountId: string,
+  payload: {
+    amount: number;
+    origin: string;
+    destination: string;
+    name?: string;
+  },
+  token: string
+) => createTransfer(accountId, payload, token);
+
+// Actualizar cuenta (alias por ejemplo)
+export const updateAccount = (
+  accountId: string,
+  data: any,
+  token: string
+) => request(`/accounts/${accountId}`, 'PUT', token, data);
+
+// Alias para compatibilidad
+export const createAnUser = createUser;

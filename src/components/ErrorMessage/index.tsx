@@ -6,12 +6,15 @@ export interface Errors {
 }
 
 export interface ErrorMessageProps {
-  errors: Errors;
+  errors?: Errors;
 }
 
 export const ErrorMessage = ({ errors }: ErrorMessageProps) => {
-  const { types } = errors;
-  const messages = Object.keys(types).map((key) => types[key]);
+  if (!errors?.types) return null;
+
+  const messages = Object.keys(errors.types).map(
+    (key) => errors.types[key]
+  );
 
   return (
     <ul className="tw-flex tw-flex-col tw-gap-y-4 tw-pt-4 tw-bg-background">

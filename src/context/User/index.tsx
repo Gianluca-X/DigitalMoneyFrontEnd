@@ -37,7 +37,7 @@ const UserInfoProvider = ({ children }: { children: React.ReactNode }) => {
         const info = parseJwt(token);
         const userId = info && info.sub;
         userId &&
-          getUser(userId)
+          getUser(userId, token)
             .then((res) => {
               dispatch({ type: userActionTypes.SET_USER, payload: res });
               dispatch({

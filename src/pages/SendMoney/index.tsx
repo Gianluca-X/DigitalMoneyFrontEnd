@@ -158,9 +158,9 @@ function SendMoneyForm() {
   useEffect(() => {
     if (destination) {
       // TODO: implement a service to get user account by alias or cvu
-      getAccounts().then((accounts) => {
+      getAccounts(token).then((accounts) => {
         const userAccount = accounts.find(
-          (account) =>
+          (account:UserAccount) =>
             account.cvu === destination || account.alias === destination
         );
         if (userAccount) {
@@ -176,7 +176,7 @@ function SendMoneyForm() {
   useEffect(() => {
     if (userDestinationAccount) {
       const { userId } = userDestinationAccount;
-      getUser(userId).then((user) => {
+      getUser(userId, token).then((user) => {
         setUserDestination(user);
       });
     }
@@ -184,9 +184,9 @@ function SendMoneyForm() {
 
   useEffect(() => {
     if (user && user.id) {
-      getAccounts().then((accounts) => {
+      getAccounts(token).then((accounts) => {
         const userAccount = accounts.find(
-          (account) => account.userId === user.id
+          (account:UserAccount) => account.userId === user.id
         );
         if (userAccount) {
           setUserOriginAccount(userAccount);
@@ -232,12 +232,14 @@ function SendMoneyForm() {
       if (user && user.id) {
         createTransferActivity(
           user.id,
-          token,
-          origin,
-          destination,
-          amount,
-          destinationName
-        ).then((response) => {
+          {
+            origin,
+            destination,
+            amount,
+            name: destinationName,
+          },
+          token
+        ).then((response: any) => {
           navigate(`${ROUTES.ACTIVITY_DETAILS}?${STEP}${response.id}`);
         });
       }
