@@ -35,17 +35,18 @@ export const Tooltip = ({
   const updateActive = () => setIsActive(true);
   
   useEffect(() => {
-    const cancelActive = () => setIsActive(false);
-    if (isActive) {
-      setTimeout(() => window.addEventListener('click', cancelActive));
-      window.addEventListener('scroll', cancelActive);
-    }
+  const cancelActive = () => setIsActive(false);
 
-    return () => {
-      removeEventListener('click', cancelActive);
-      removeEventListener('scroll', cancelActive);
-    };
-  }, [isActive]);
+  if (isActive) {
+    window.addEventListener('click', cancelActive);
+    window.addEventListener('scroll', cancelActive);
+  }
+
+  return () => {
+    window.removeEventListener('click', cancelActive);
+    window.removeEventListener('scroll', cancelActive);
+  };
+}, [isActive]);
 
   return (
     <div
