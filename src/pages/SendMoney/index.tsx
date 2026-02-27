@@ -41,21 +41,17 @@ const SendMoney = () => {
   const [token] = useLocalStorage('token');
 
   useEffect(() => {
-    if (user && user.id && !step) {
+    if (user?.id && !step) {
       getUserActivities(user.id, token)
         .then((activities) => {
-          if ((activities as Transaction[]).length > 0) {
-            const parsedActivities = activities.filter(
-              (activity: Transaction) =>
-                activity.type === TransactionType.Transfer
-            );
-            setUserActivities(parsedActivities);
-          }
+          const transfers = (activities as Transaction[]).filter(
+            (activity) => activity.type === TransactionType.Transfer
+          );
+          setUserActivities(transfers);
         })
         .catch((error) => {
-          if (error.status === UNAUTHORIZED) {
-            logout();
-          }
+          if (error.status === UNAUTHORIZED) logout();
+          console.error(error);
         });
     }
   }, [logout, step, token, user]);
@@ -64,11 +60,11 @@ const SendMoney = () => {
     if (userActivities.length > 0) {
       const parsedRecords = userActivities
         .filter(
-          (activity: Transaction) =>
+          (activity) =>
             calculateTransacionType(activity.amount, activity.type) ===
             ActivityType.TRANSFER_IN
         )
-        .map((activity: Transaction) =>
+        .map((activity) =>
           parseRecordContent(
             { name: activity.name, origin: activity.origin },
             RecordVariant.ACCOUNT
@@ -119,11 +115,12 @@ const SendMoney = () => {
             className="tw-max-w-5xl"
             content={
               <>
-                <div>
-                  <p className="tw-mb-4 tw-font-bold">Últimas cuentas</p>
-                </div>
-                {userAccounts.length > 0 && <Records records={userAccounts} />}
-                {userAccounts.length === 0 && <p>No hay cuentas registradas</p>}
+                <p className="tw-mb-4 tw-font-bold">Últimas cuentas</p>
+                {userAccounts.length > 0 ? (
+                  <Records records={userAccounts} />
+                ) : (
+                  <p>No hay cuentas registradas</p>
+                )}
               </>
             }
           />
@@ -139,213 +136,207 @@ const duration = 2000;
 
 function SendMoneyForm() {
   const [searchParams] = useSearchParams();
-  const [destination, setDestination] = useState(
-    searchParams.get('destination')
-  );
-  const step = searchParams.get('step');
-  const [formState, setFormState] = useState({
-    destination: destination || '',
-    amount: '',
-  });
-  const [userDestinationAccount, setUserDestinationAccount] =
-    useState<UserAccount>();
-  const [userDestination, setUserDestination] = useState<User>();
-  const [userOriginAccount, setUserOriginAccount] = useState<UserAccount>();
   const navigate = useNavigate();
   const { user } = useUserInfo();
   const [token] = useLocalStorage('token');
 
+  const step = searchParams.get('step');
+  const initialDestination = searchParams.get('destination');
+
+  const [destination, setDestination] = useState(initialDestination);
+  const [formState, setFormState] = useState({
+    destination: initialDestination || '',
+    amount: '',
+  });
+
+  const [userDestinationAccount, setUserDestinationAccount] =
+    useState<UserAccount>();
+  const [userDestination, setUserDestination] = useState<User>();
+  const [userOriginAccount, setUserOriginAccount] =
+    useState<UserAccount>();
+
+  // Buscar cuenta destino
   useEffect(() => {
     if (destination) {
-      // TODO: implement a service to get user account by alias or cvu
-      getAccounts(token).then((accounts) => {
-        const userAccount = accounts.find(
-          (account:UserAccount) =>
-            account.cvu === destination || account.alias === destination
-        );
-        if (userAccount) {
-          setUserDestinationAccount(userAccount);
-        } else {
-          setDestination(null);
-          navigate(`${ROUTES.SEND_MONEY}?${STEP}1&${ERROR}`);
-        }
-      });
-    }
-  }, [destination, navigate]);
+      getAccounts(token)
+        .then((accounts) => {
+          const trimmed = destination.trim();
+          const found = accounts.find(
+            (account: UserAccount) =>
+              account.cvu === trimmed || account.alias === trimmed
+          );
 
+          if (found) {
+            setUserDestinationAccount(found);
+          } else {
+            setDestination(null);
+            navigate(`${ROUTES.SEND_MONEY}?${STEP}1&${ERROR}`);
+          }
+        })
+        .catch(console.error);
+    }
+  }, [destination, navigate, token]);
+
+  // Obtener usuario destino
   useEffect(() => {
     if (userDestinationAccount) {
-      const { userId } = userDestinationAccount;
-      getUser(userId, token).then((user) => {
-        setUserDestination(user);
-      });
+      getUser(userDestinationAccount.userId, token)
+        .then(setUserDestination)
+        .catch(console.error);
     }
-  }, [navigate, userDestinationAccount]);
+  }, [userDestinationAccount, token]);
 
+  // Obtener cuenta origen
   useEffect(() => {
-    if (user && user.id) {
-      getAccounts(token).then((accounts) => {
-        const userAccount = accounts.find(
-          (account:UserAccount) => account.userId === user.id
-        );
-        if (userAccount) {
-          setUserOriginAccount(userAccount);
-        }
-      });
+    if (user?.id) {
+      getAccounts(token)
+        .then((accounts) => {
+          const found = accounts.find(
+            (account: UserAccount) => account.userId === user.id
+          );
+          if (found) setUserOriginAccount(found);
+        })
+        .catch(console.error);
     }
-  }, [user]);
+  }, [user, token]);
 
   const onNavigate = useCallback(
-    (step: number) => {
-      navigate(`${ROUTES.SEND_MONEY}?${STEP}${step}`);
+    (stepNumber: number) => {
+      navigate(`${ROUTES.SEND_MONEY}?${STEP}${stepNumber}`);
     },
     [navigate]
   );
 
   useEffect(() => {
-    if (step !== '1' && formState.destination === '') {
-      setTimeout(() => onNavigate(1));
+    if (step !== '1' && !formState.destination) {
+      onNavigate(1);
     }
-  }, [step, formState, navigate, onNavigate]);
+  }, [step, formState.destination, onNavigate]);
 
   const onChange = (
     event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
     maxLength?: number
   ) => handleChange(event, setFormState, maxLength);
 
-  return <>{renderStep(formState)}</>;
+  const handleTransfer = () => {
+    const parsedAmount = parseFloat(formState.amount || '0');
 
-  function renderStep(formState: { destination: string; amount: string }) {
-    const { amount } = formState;
-    const { Argentina } = currencies;
-    const { locales, currency } = Argentina;
-    const isError = !!searchParams.get('error');
+    if (!user?.id || !parsedAmount) return;
 
-    const handleClick = (
-      origin: string,
-      destination: string,
-      amount: number
-    ) => {
-      const destinationName = userDestinationAccount
-        ? userDestinationAccount.name
-        : '';
-      if (user && user.id) {
-        createTransferActivity(
-          user.id,
-          {
-            origin,
-            destination,
-            amount,
-            name: destinationName,
-          },
-          token
-        ).then((response: any) => {
-          navigate(`${ROUTES.ACTIVITY_DETAILS}?${STEP}${response.id}`);
-        });
-      }
-    };
+    createTransferActivity(
+      user.id,
+      {
+        origin: userOriginAccount?.cvu || '',
+        destination: userDestinationAccount?.cvu || '',
+        amount: parsedAmount,
+        name: userDestinationAccount?.name || '',
+      },
+      token
+    )
+      .then((response: any) => {
+        navigate(`${ROUTES.ACTIVITY_DETAILS}?${STEP}${response.id}`);
+      })
+      .catch(console.error);
+  };
 
-    switch (step) {
-      case '1':
-        return (
-          <>
-            <FormSingle
-              name="destination"
-              title="Agregá una nueva cuenta"
-              label="CVU ó Alias"
-              type="text"
-              actionLabel="Continuar"
-              formState={formState}
-              handleChange={(
-                event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-              ) => onChange(event)}
-              submit={() => {
-                if (formState.destination) {
-                  setDestination(formState.destination);
-                  onNavigate(2);
-                }
-              }}
-            />
-            {isError && (
-              <SnackBar
-                duration={duration}
-                message="Cuenta no encontrada"
-                type="error"
-              />
-            )}
-          </>
-        );
-      case '2':
-        return (
+  const { Argentina } = currencies;
+  const { locales, currency } = Argentina;
+  const isError = !!searchParams.get('error');
+
+  switch (step) {
+    case '1':
+      return (
+        <>
           <FormSingle
-            name="amount"
-            title={`¿Cuanto quieres transferir a ${
-              userDestination && userDestination.firstName
-            } ?`}
-            label="Monto"
-            type="number"
+            name="destination"
+            title="Agregá una nueva cuenta"
+            label="CVU ó Alias"
+            type="text"
             actionLabel="Continuar"
-            validation={moneyValidationConfig}
             formState={formState}
-            handleChange={(
-              event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-            ) => onChange(event)}
-            submit={() => onNavigate(3)}
+            handleChange={(e) => onChange(e)}
+            submit={() => {
+              if (formState.destination.trim()) {
+                setDestination(formState.destination);
+                onNavigate(2);
+              }
+            }}
           />
-        );
-      case '3':
-        return (
-          <>
-            <CardCustom
-              content={
-                <div className="tw-flex tw-flex-col">
-                  <div className="tw-flex tw-justify-between tw-mb-4">
-                    <p className="tw-font-bold">Revisá que está todo bien</p>
-                  </div>
-                  <div className="tw-flex tw-flex-col tw-mb-4">
-                    <div className="tw-flex tw-gap-2">
-                      <p className="">Vas a transferir</p>
-                      <Link to={`${ROUTES.SEND_MONEY}?${STEP}2`}>
-                        <Icon type="edit" />
-                      </Link>
-                    </div>
-                    <p className="tw-font-bold">
-                      {formatCurrency(locales, currency, parseFloat(amount))}
-                    </p>
-                  </div>
-                  <div className="tw-flex tw-flex-col tw-mb-4">
-                    <p className="">Para</p>
-                    <p className="tw-font-bold">
-                      {userDestination &&
-                        `${userDestination.firstName} ${userDestination.lastName}`}
-                    </p>
-                  </div>
-                  <div className="tw-flex tw-flex-col tw-mb-4">
-                    <p className="tw-font-bold">CVU: {formState.destination}</p>
-                  </div>
-                </div>
-              }
-              actions={
-                <div className="tw-flex tw-w-full tw-justify-end tw-mt-6">
-                  <Button
-                    type="submit"
-                    className="tw-h-12 tw-w-64"
-                    variant="outlined"
-                    onClick={() =>
-                      handleClick(
-                        userOriginAccount?.cvu || '',
-                        userDestinationAccount?.cvu || '',
-                        parseFloat(amount)
-                      )
-                    }
-                  >
-                    Transferir
-                  </Button>
-                </div>
-              }
+          {isError && (
+            <SnackBar
+              duration={duration}
+              message="Cuenta no encontrada"
+              type="error"
             />
-          </>
-        );
-    }
+          )}
+        </>
+      );
+
+    case '2':
+      return (
+        <FormSingle
+          name="amount"
+          title={`¿Cuánto quieres transferir a ${
+            userDestination?.firstName || ''
+          }?`}
+          label="Monto"
+          type="number"
+          actionLabel="Continuar"
+          validation={moneyValidationConfig}
+          formState={formState}
+          handleChange={(e) => onChange(e)}
+          submit={() => onNavigate(3)}
+        />
+      );
+
+    case '3':
+      return (
+        <CardCustom
+          content={
+            <div className="tw-flex tw-flex-col">
+              <p className="tw-font-bold tw-mb-4">
+                Revisá que está todo bien
+              </p>
+
+              <div className="tw-mb-4">
+                <p>Vas a transferir</p>
+                <p className="tw-font-bold">
+                  {formatCurrency(
+                    locales,
+                    currency,
+                    parseFloat(formState.amount || '0')
+                  )}
+                </p>
+              </div>
+
+              <div className="tw-mb-4">
+                <p>Para</p>
+                <p className="tw-font-bold">
+                  {userDestination
+                    ? `${userDestination.firstName} ${userDestination.lastName}`
+                    : ''}
+                </p>
+              </div>
+
+              <p className="tw-font-bold">
+                CVU: {formState.destination}
+              </p>
+            </div>
+          }
+          actions={
+            <div className="tw-flex tw-w-full tw-justify-end tw-mt-6">
+              <Button
+                variant="outlined"
+                onClick={handleTransfer}
+              >
+                Transferir
+              </Button>
+            </div>
+          }
+        />
+      );
+
+    default:
+      return null;
   }
 }
