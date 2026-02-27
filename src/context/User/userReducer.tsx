@@ -6,7 +6,7 @@ interface UserAction {
   payload: any;
 }
 
-export default (state: UserInfoState, action: UserAction) => {
+const userReducer = (state: UserInfoState, action: UserAction) => {
   switch (action.type) {
     case userActionTypes.SET_USER:
       return {
@@ -22,3 +22,5 @@ export default (state: UserInfoState, action: UserAction) => {
       return state;
   }
 };
+
+export default userReducer;
