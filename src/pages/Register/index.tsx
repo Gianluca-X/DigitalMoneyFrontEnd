@@ -63,9 +63,6 @@ const Register = () => {
   });
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [token, setToken] = useLocalStorage('token');
-  const { setIsAuthenticated } = useAuth();
-
   const [values, setValues] = React.useState<RegisterState>({
     email: '',
     password: '',
