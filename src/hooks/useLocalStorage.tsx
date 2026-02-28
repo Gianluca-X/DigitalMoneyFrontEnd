@@ -10,7 +10,7 @@ export function useLocalStorage(
     deserialize?: (value: string) => any;
   } = {}
 ) {
-  const [value, setValue] = useState<T | null>(() => {
+  const [value, setValue] = useState<any>(() => {
     try {
       const valueInLocalStorage = window.localStorage.getItem(key);
 
