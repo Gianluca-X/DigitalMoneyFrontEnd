@@ -1,13 +1,13 @@
 import { useState, useEffect, useRef } from "react";
 
-export function useLocalStorage<T>(
+export function useLocalStorage(
   key: string,
   {
     serialize = JSON.stringify,
     deserialize = JSON.parse,
   }: {
-    serialize?: (value: T) => string;
-    deserialize?: (value: string) => T;
+    serialize?: (value: any) => string;
+    deserialize?: (value: string) => any;
   } = {}
 ) {
   const [value, setValue] = useState<T | null>(() => {
