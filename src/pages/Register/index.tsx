@@ -103,41 +103,45 @@ const Register = () => {
   ) => handleChange<RegisterState>(event, setValues, maxLength);
 
   const onSubmit: SubmitHandler<RegisterInputs> = ({
-    name,
+  name,
+  lastName,
+  password,
+  phone,
+  dni,
+  email,
+}) => {
+  setIsSubmiting(true);
+
+  createAnUser({
+    firstName: name,
     lastName,
     password,
     phone,
     dni,
     email,
-  }) => {
-    setIsSubmiting(true);
-    createAnUser({
-      firstName: name,
-      lastName,
-      password,
-      phone,
-      dni,
-      email,
-    })
-      .then((response) => {
-        setIsSuccess(true);
-        setToken(response.accessToken);
-        setMessage(SUCCESS_MESSAGES[SUCCESS_MESSAGES_KEYS.USER_REGISTER]);
-        setTimeout(() => {
-          setIsSubmiting(false);
-          setIsAuthenticated(true);
-        }, messageDuration);
-      })
-      .catch((error) => {
-        console.log(error);
-        setIsError(true);
-        setMessage(ERROR_MESSAGES.INVALID_USER);
+  })
+    .then(() => {
+      setIsSuccess(true);
+      setMessage(
+        "Registro exitoso. Verificá tu email antes de iniciar sesión."
+      );
+
+      setTimeout(() => {
         setIsSubmiting(false);
-        if (error.status === BAD_REQUEST) {
-          setIsError(true);
-        }
-      });
-  };
+
+        // 🔥 Redirigir a login
+        window.location.href = "/login";
+      }, messageDuration);
+    })
+    .catch((error) => {
+      console.log(error);
+      setIsError(true);
+      setMessage(
+        error?.message || ERROR_MESSAGES.INVALID_USER
+      );
+      setIsSubmiting(false);
+    });
+};
 
   return (
     <div className="tw-w-full tw-h-full tw-flex tw-flex-col tw-flex-1 tw-items-center tw-justify-center">
