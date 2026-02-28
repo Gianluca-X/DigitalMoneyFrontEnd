@@ -1,15 +1,28 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from "react";
 
-export function useLocalStorage(
+export function useLocalStorage<T>(
   key: string,
-  { serialize = JSON.stringify, deserialize = JSON.parse } = {}
+  {
+    serialize = JSON.stringify,
+    deserialize = JSON.parse,
+  }: {
+    serialize?: (value: T) => string;
+    deserialize?: (value: string) => T;
+  } = {}
 ) {
-  const [value, setValue] = useState(() => {
-    const valueInLocalStorage = window.localStorage.getItem(key);
-    if (valueInLocalStorage) {
+  const [value, setValue] = useState<T | null>(() => {
+    try {
+      const valueInLocalStorage = window.localStorage.getItem(key);
+
+      if (!valueInLocalStorage || valueInLocalStorage === "undefined") {
+        return null;
+      }
+
       return deserialize(valueInLocalStorage);
+    } catch (error) {
+      console.error("Error parsing localStorage:", error);
+      return null;
     }
-    return null;
   });
 
   const prevKeyRef = useRef(key);
@@ -18,11 +31,21 @@ export function useLocalStorage(
     const prevKey = prevKeyRef.current;
 
     if (prevKey !== key) {
-      window.localStorage.remove(prevKey);
+      window.localStorage.removeItem(prevKey);
     }
+
     prevKeyRef.current = key;
-    window.localStorage.setItem(key, serialize(value));
+
+    try {
+      if (value === undefined || value === null) {
+        window.localStorage.removeItem(key);
+      } else {
+        window.localStorage.setItem(key, serialize(value));
+      }
+    } catch (error) {
+      console.error("Error saving to localStorage:", error);
+    }
   }, [value, serialize, key]);
 
-  return [value, setValue];
+  return [value, setValue] as const;
 }
