@@ -18,7 +18,6 @@ import {
   dniValidationConfig,
   handleChange,
   createAnUser,
-  ERROR_MESSAGES,
 } from '../../utils/';
 import { ErrorMessage, Errors } from '../../components/ErrorMessage';
 import { SnackBar } from '../../components';
@@ -128,7 +127,7 @@ const Register = () => {
       console.log(error);
       setIsError(true);
       setMessage(
-        error?.message || ERROR_MESSAGES.INVALID_USER
+        error?.message || "Ocurrió un error al registrar el usuario."
       );
       setIsSubmiting(false);
     });
