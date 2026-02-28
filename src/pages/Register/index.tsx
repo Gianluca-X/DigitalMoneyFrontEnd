@@ -21,13 +21,6 @@ import {
 } from '../../utils/';
 import { ErrorMessage, Errors } from '../../components/ErrorMessage';
 import { SnackBar } from '../../components';
-import {
-  ERROR_MESSAGES,
-  SUCCESS_MESSAGES_KEYS,
-  SUCCESS_MESSAGES,
-  BAD_REQUEST,
-} from '../../constants/';
-import { useAuth, useLocalStorage } from '../../hooks';
 
 interface RegisterState {
   name: string;
@@ -281,7 +274,7 @@ const Register = () => {
                 autoComplete="off"
               />
             </FormControl>
-            {errors.password && (
+            {errors.passwordRepeated && (
               <ErrorMessage errors={errors.passwordRepeated as Errors} />
             )}
           </div>
