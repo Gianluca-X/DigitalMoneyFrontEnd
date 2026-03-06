@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
-import React, { createContext, useState, SetStateAction } from 'react';
+import React, { createContext, useEffect, useState, SetStateAction } from 'react';
 import { useLocalStorage } from '../../hooks';
 
 export const AuthContext = createContext<{
@@ -15,9 +15,10 @@ export const AuthContext = createContext<{
 const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [token, setToken] = useLocalStorage('token');
   const [isAuthenticated, setIsAuthenticated] = useState(!!token);
-
+    useEffect(() => {
+      setIsAuthenticated(!!token);
+    }, [token]);
   const logout = () => {
-    setIsAuthenticated(false);
     setToken(null);
   };
 

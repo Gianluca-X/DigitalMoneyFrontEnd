@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import Button from '@mui/material/Button';
+import { useNavigate } from "react-router-dom";
 import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
 import OutlinedInput from '@mui/material/OutlinedInput';
@@ -54,7 +55,7 @@ const Login = () => {
   const [isError, setIsError] = useState<boolean>(false);
   const [isSubmiting, setIsSubmiting] = useState<boolean>(false);
   const [message, setMessage] = useState<string>('');
-
+  const navigate = useNavigate();
   const isEmpty = isValueEmpty(values);
   const hasErrors = useMemo(() => valuesHaveErrors(errors), [errors]);
 
@@ -80,11 +81,12 @@ const Login = () => {
     setIsSubmiting(true);
     login(email, password)
       .then((response) => {
-        setToken(response.accessToken);
+        setToken(response.token);
         setTimeout(() => {
           setIsSubmiting(false);
           setIsAuthenticated(true);
-        });
+          navigate("/");
+        },0);
       })
       .catch((error) => {
         // eslint-disable-next-line no-console
