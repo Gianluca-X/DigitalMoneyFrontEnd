@@ -30,13 +30,12 @@ const UserInfoProvider = ({ children }: { children: React.ReactNode }) => {
 
   const { isAuthenticated, setIsAuthenticated } = useAuth();
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      const token = window.localStorage.getItem('token');
-      if (token) {
+    useEffect(() => {
+      if (isAuthenticated && token) {
         const info = parseJwt(token);
-        const userId = info && info.sub;
-        userId &&
+        const userId = info?.userId;
+
+        if (userId) {
           getUser(userId, token)
             .then((res) => {
               dispatch({ type: userActionTypes.SET_USER, payload: res });
@@ -50,14 +49,13 @@ const UserInfoProvider = ({ children }: { children: React.ReactNode }) => {
                 setToken(null);
                 setIsAuthenticated(false);
               }
-              // eslint-disable-next-line no-console
               console.log(error);
             });
+        }
       } else {
         setIsAuthenticated(false);
       }
-    }
-  }, [dispatch, isAuthenticated, setIsAuthenticated, setToken, token]);
+    }, [dispatch, isAuthenticated, setIsAuthenticated, setToken, token]);
 
   return (
     <userInfoContext.Provider
