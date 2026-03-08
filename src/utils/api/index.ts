@@ -23,14 +23,20 @@ const request = async (
   });
 
   if (!response.ok) {
-  const errorData = await response.json();
-  throw new Error(errorData.message || 'Request failed');
+    // Intentamos parsear el error, si falla usamos un mensaje genérico
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || `Request failed with status ${response.status}`);
   }
 
-  // Si la respuesta es 204 No Content
   if (response.status === 204) return null;
 
-  return response.json();
+  const contentType = response.headers.get("content-type");
+  if (!contentType || !contentType.includes("application/json")) {
+    return null; 
+  }
+
+  // 3. Solo parseamos si hay un header de JSON
+  return response.json().catch(() => null); 
 };
 
 /** ------------------ AUTH ------------------ */
