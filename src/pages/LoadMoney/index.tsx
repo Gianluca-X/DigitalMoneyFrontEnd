@@ -64,15 +64,15 @@ const LoadMoney = () => {
   ) => handleChange(event, setFormState);
 
   const onSubmit: SubmitHandler<any> = (data) => {
-  if (user && user.id && cardId) {
+  if (user && user.id && cardId && card) {
     setIsSubmiting(true);
 
     createDepositActivity(
       user.id,
-      {
-        cardId: Number(cardId),
-        amount: parseFloat(data.money),
-      },
+    {
+      cardNumber: card,
+      amount: parseFloat(data.money),
+    },
       token
     )
       .then(() => {

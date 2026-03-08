@@ -112,7 +112,7 @@ export const deleteUserCard = (
 // Depositar dinero
 export const createDepositActivity = (
   accountId: string,
-  payload: { amount: number; cardId: number },
+  payload: { amount: number; cardNumber: string },
   token: string
 ) =>
   request(
