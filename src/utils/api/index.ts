@@ -112,10 +112,15 @@ export const deleteUserCard = (
 // Depositar dinero
 export const createDepositActivity = (
   accountId: string,
-  payload: { amount: number },
+  payload: { amount: number; cardId: number },
   token: string
-) => request(`/accounts/${accountId}/transferences/cards`, 'POST', token, payload);
-
+) =>
+  request(
+    `/accounts/${accountId}/transferences/cards`,
+    'POST',
+    token,
+    payload
+  );
 // Transferencia
 export const createTransferActivity = (
   accountId: string,

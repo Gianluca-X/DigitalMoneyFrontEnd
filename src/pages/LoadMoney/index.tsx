@@ -26,7 +26,11 @@ const duration = 3000;
 const LoadMoney = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const card = !!searchParams.get('card');
+
+
+  const card = searchParams.get('card');
+  const cardId = searchParams.get('id');
+
   const { user } = useUserInfo();
   const [token] = useLocalStorage('token');
   const [isError, setIsError] = useState<boolean>(false);
@@ -60,26 +64,30 @@ const LoadMoney = () => {
   ) => handleChange(event, setFormState);
 
   const onSubmit: SubmitHandler<any> = (data) => {
-    if (user && user.id) {
-      setIsSubmiting(true);
-      createDepositActivity(
-            user.id,
-            { amount: parseFloat(data.money) },
-            token
-          )
-        .then(() => {
+  if (user && user.id && cardId) {
+    setIsSubmiting(true);
+
+    createDepositActivity(
+      user.id,
+      {
+        cardId: Number(cardId),
+        amount: parseFloat(data.money),
+      },
+      token
+    )
+      .then(() => {
+        setIsSubmiting(false);
+        navigate(`${ROUTES.HOME}?${SUCCESS}`);
+      })
+      .catch(() => {
+        setIsError(true);
+        setTimeout(() => {
+          setIsError(false);
           setIsSubmiting(false);
-          navigate(`${ROUTES.HOME}?${SUCCESS}`);
-        })
-        .catch(() => {
-          setIsError(true);
-          setTimeout(() => {
-            setIsError(false);
-            setIsSubmiting(false);
-          }, duration);
-        });
-    }
-  };
+        }, duration);
+      });
+  }
+};
 
   if (card) {
     return (
