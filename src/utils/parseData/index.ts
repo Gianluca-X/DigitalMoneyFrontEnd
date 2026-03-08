@@ -1,8 +1,14 @@
 import { IRecord } from '../../components';
 
-export const parseRecordContent = (record: any, variant: any): IRecord => {
+export const parseRecordContent = (record: any, variant: any) => {
   return {
-    content: { ...record },
+    content: { 
+      ...record,
+      // El back manda 'date', lo guardamos también como 'dated'
+      dated: record.date || record.dated, 
+      // El back manda el texto en 'cvu', lo guardamos como 'name'
+      name: record.name || record.cvu || "Ingreso de dinero",
+    },
     variant,
   };
 };

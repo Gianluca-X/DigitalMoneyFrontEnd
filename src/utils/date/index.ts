@@ -1,12 +1,11 @@
 export const formatDateFromString = (date: string) => {
+  if (!date) return '---';
   const newDate = new Date(date);
+  if (isNaN(newDate.getTime())) return 'Fecha pendiente';
 
-  const formatDate =
-    newDate.getDate() +
-    '-' +
-    (newDate.getMonth() + 1) +
-    '-' +
-    newDate.getFullYear();
+  const day = String(newDate.getDate()).padStart(2, '0');
+  const month = String(newDate.getMonth() + 1).padStart(2, '0');
+  const year = newDate.getFullYear();
 
-  return formatDate;
+  return day + '-' + month + '-' + year;
 };
