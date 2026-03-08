@@ -1,5 +1,3 @@
-import { IRecord } from '../../components';
-
 export const parseRecordContent = (record: any, variant: any) => {
   return {
     content: { 
