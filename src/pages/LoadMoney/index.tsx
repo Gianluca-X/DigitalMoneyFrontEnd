@@ -64,7 +64,7 @@ const LoadMoney = () => {
   ) => handleChange(event, setFormState);
 
   const onSubmit: SubmitHandler<any> = (data) => {
-  if (user && user.id && cardId && card) {
+  if (user && user.id && card) {
     setIsSubmiting(true);
 
     createDepositActivity(
