@@ -28,7 +28,7 @@ const LoadMoney = () => {
   const [searchParams] = useSearchParams();
 
 
-  const card = searchParams.get('card');
+  const cardId = searchParams.get('cardId');
 
   const { user } = useUserInfo();
   const [token] = useLocalStorage('token');
@@ -63,13 +63,13 @@ const LoadMoney = () => {
   ) => handleChange(event, setFormState);
 
   const onSubmit: SubmitHandler<any> = (data) => {
-  if (user && user.id && card) {
+  if (user && user.id && cardId) {
     setIsSubmiting(true);
 
     createDepositActivity(
       user.id,
     {
-      cardNumber: card,
+      cardId: Number(cardId),
       amount: parseFloat(data.money),
     },
       token
@@ -88,7 +88,7 @@ const LoadMoney = () => {
   }
 };
 
-  if (card) {
+  if (cardId) {
     return (
       <div className="tw-w-full">
         <CardCustom
