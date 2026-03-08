@@ -45,10 +45,7 @@ const Login = () => {
   });
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const [token, setToken] = useLocalStorage('token', {
-  serialize: (value) => value,
-  deserialize: (value) => value,
-});
+const [token, setToken] = useLocalStorage('token');
   const [values, setValues] = useState<LoginState>({
     email: '',
     password: '',
