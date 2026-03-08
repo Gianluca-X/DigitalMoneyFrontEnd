@@ -29,7 +29,6 @@ const LoadMoney = () => {
 
 
   const card = searchParams.get('card');
-  const cardId = searchParams.get('id');
 
   const { user } = useUserInfo();
   const [token] = useLocalStorage('token');
