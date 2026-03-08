@@ -18,9 +18,10 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     useEffect(() => {
       setIsAuthenticated(!!token);
     }, [token]);
-  const logout = () => {
-    setToken(null);
-  };
+const logout = () => {
+  setToken(null);
+  setIsAuthenticated(false);
+};
 
   return (
     <AuthContext.Provider
