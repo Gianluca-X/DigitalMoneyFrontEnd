@@ -28,7 +28,7 @@ const UserInfoProvider = ({ children }: { children: React.ReactNode }) => {
   const [state, dispatch] = useReducer(userReducer, initialState);
   const [token, setToken] = useLocalStorage('token');
 
-  const { isAuthenticated, setIsAuthenticated } = useAuth();
+  const { setIsAuthenticated } = useAuth();
 
     useEffect(() => {
   if (!token) {
