@@ -114,8 +114,7 @@ export const createDepositActivity = (
   accountId: string,
   payload: { amount: number },
   token: string
-) => request(`/accounts/${accountId}/deposit`, 'POST', token, payload);
-
+) => request(`/accounts/${accountId}/transferences/money`, 'POST', token, payload);
 // Transferencia
 export const createTransferActivity = (
   accountId: string,
