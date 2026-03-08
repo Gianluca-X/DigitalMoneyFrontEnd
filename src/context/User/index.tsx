@@ -60,7 +60,7 @@ const UserInfoProvider = ({ children }: { children: React.ReactNode }) => {
       console.log(error);
     });
 
-}, [token]);
+}, [token, setIsAuthenticated, setToken]);
 
   return (
     <userInfoContext.Provider
