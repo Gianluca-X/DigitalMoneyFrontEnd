@@ -21,7 +21,7 @@ import {
 import { ErrorMessage, Errors } from '../../components/ErrorMessage';
 import { useAuth, useLocalStorage } from '../../hooks';
 import { SnackBar } from '../../components';
-import { BAD_REQUEST, ERROR_MESSAGES } from '../../constants';
+import { BAD_REQUEST, ERROR_MESSAGES, FORBIDDEN } from '../../constants';
 
 interface LoginState {
   email: string;
@@ -90,20 +90,20 @@ const [token, setToken] = useLocalStorage('token');
         },0);
       })
       .catch((error) => {
-      console.log(error);
-      setIsSubmiting(false);
+          setIsSubmiting(false);
 
-      if (error.message === "EMAIL_NOT_VERIFIED") {
-        setMessage("Tu correo no está verificado.");
-        setShowResend(true);
-      } else {
-        setMessage(ERROR_MESSAGES.NOT_FOUND_USER);
-      }
+          if (error.status === FORBIDDEN) {
+            setMessage("Tu correo no está verificado.");
+            setShowResend(true);
+            return;
+          }
 
-      if (error.status === BAD_REQUEST) {
-        setIsError(true);
-      }
-    });
+          setMessage(ERROR_MESSAGES.NOT_FOUND_USER);
+
+          if (error.status === BAD_REQUEST) {
+            setIsError(true);
+          }
+        });
   };
 const resendVerificationCode = async () => {
   try {

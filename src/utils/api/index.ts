@@ -23,10 +23,16 @@ const request = async (
   });
 
   if (!response.ok) {
-    // Intentamos parsear el error, si falla usamos un mensaje genérico
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.message || `Request failed with status ${response.status}`);
-  }
+  const errorData = await response.json().catch(() => ({}));
+
+  const error: any = new Error(
+    errorData.message || `Request failed with status ${response.status}`
+  );
+
+  error.status = response.status;
+
+  throw error;
+}
 
   if (response.status === 204) return null;
 
