@@ -22,29 +22,24 @@ const request = async (
     body: body ? JSON.stringify(body) : undefined,
   });
 
-  if (!response.ok) {
-  const errorData = await response.json().catch(() => ({}));
-
-  const error: any = new Error(
-    errorData.message || `Request failed with status ${response.status}`
-  );
-
-  error.status = response.status;
-
-  throw error;
-}
-
-  if (response.status === 204) return null;
-
   const contentType = response.headers.get("content-type");
-  if (!contentType || !contentType.includes("application/json")) {
-    return null; 
+
+  let data = null;
+
+  if (contentType && contentType.includes("application/json")) {
+    data = await response.json().catch(() => null);
   }
 
-  // 3. Solo parseamos si hay un header de JSON
-  return response.json().catch(() => null); 
-};
+  if (!response.ok) {
+    return {
+      error: true,
+      status: response.status,
+      data,
+    };
+  }
 
+  return data;
+};
 /** ------------------ AUTH ------------------ */
 export const login = (email: string, password: string) =>
   request('/auth/login', 'POST', undefined, { email, password });
