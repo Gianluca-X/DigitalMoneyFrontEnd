@@ -16,6 +16,7 @@ import {
   passwordValidationConfig,
   handleChange,
   login,
+  resendVerification,
 } from '../../utils/';
 import { ErrorMessage, Errors } from '../../components/ErrorMessage';
 import { useAuth, useLocalStorage } from '../../hooks';
@@ -58,7 +59,7 @@ const [token, setToken] = useLocalStorage('token');
   const navigate = useNavigate();
   const isEmpty = isValueEmpty(values);
   const hasErrors = useMemo(() => valuesHaveErrors(errors), [errors]);
-
+  const [showResend, setShowResend] = useState<boolean>(false);
   const handleClickShowPassword = () => {
     setValues({
       ...values,
@@ -89,15 +90,31 @@ const [token, setToken] = useLocalStorage('token');
         },0);
       })
       .catch((error) => {
-        // eslint-disable-next-line no-console
-        console.log(error);
-        setIsSubmiting(false);
+      console.log(error);
+      setIsSubmiting(false);
+
+      if (error.message === "EMAIL_NOT_VERIFIED") {
+        setMessage("Tu correo no está verificado.");
+        setShowResend(true);
+      } else {
         setMessage(ERROR_MESSAGES.NOT_FOUND_USER);
-        if (error.status === BAD_REQUEST) {
-          setIsError(true);
-        }
-      });
+      }
+
+      if (error.status === BAD_REQUEST) {
+        setIsError(true);
+      }
+    });
   };
+const resendVerificationCode = async () => {
+  try {
+    await resendVerification(values.email);
+
+    setMessage("Te enviamos un nuevo código de verificación");
+    setShowResend(false);
+  } catch {
+    setMessage("No pudimos enviar el correo. Intenta nuevamente.");
+  }
+};
 
   return (
     <div
@@ -172,6 +189,21 @@ const [token, setToken] = useLocalStorage('token');
         >
           Ingresar
         </Button>
+    {showResend && (
+      <div className="tw-mt-4 tw-flex tw-flex-col tw-items-center">
+        <p className="tw-text-red-400 tw-mb-2">
+          Debes verificar tu correo antes de iniciar sesión.
+        </p>
+
+        <Button
+          variant="outlined"
+          onClick={resendVerificationCode}
+          className="tw-h-10"
+        >
+          Reenviar código
+        </Button>
+      </div>
+       )}
       </form>
       {message.length > 0 && (
         <SnackBar

@@ -44,7 +44,11 @@ export const login = (email: string, password: string) =>
   request('/auth/login', 'POST', undefined, { email, password });
 
 export const logout = (token: string) => request('/auth/logout', 'POST', token);
+/** ------------------ AUTH EXTRA ------------------ */
 
+// Reenviar código de verificación
+export const resendVerification = (email: string) =>
+  request('/auth/resend-verification', 'POST', undefined, { email });
 /** ------------------ USERS ------------------ */
 export const createUser = (user: User) => request('/users/register', 'POST', undefined, user);
 export const getUser = (id: string, token: string): Promise<User> =>
