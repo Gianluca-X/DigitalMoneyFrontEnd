@@ -31,8 +31,7 @@ const request = async (
   }
 
   if (!response.ok) {
-    return {
-      error: true,
+    throw {
       status: response.status,
       data,
     };
