@@ -90,20 +90,27 @@ const [token, setToken] = useLocalStorage('token');
         },0);
       })
       .catch((error) => {
-          setIsSubmiting(false);
+      setIsSubmiting(false);
 
-          if (error.status === FORBIDDEN) {
-            setMessage("Tu correo no está verificado.");
-            setShowResend(true);
-            return;
-          }
+      try {
+        const parsedError = JSON.parse(error.message);
 
+        if (parsedError.status === FORBIDDEN) {
+          setMessage("Tu correo no está verificado.");
+          setShowResend(true);
+          return;
+        }
+
+        if (parsedError.status === BAD_REQUEST) {
+          setIsError(true);
           setMessage(ERROR_MESSAGES.NOT_FOUND_USER);
+          return;
+        }
 
-          if (error.status === BAD_REQUEST) {
-            setIsError(true);
-          }
-        });
+      } catch {
+        setMessage(ERROR_MESSAGES.NOT_FOUND_USER);
+      }
+    });
   };
 const resendVerificationCode = async () => {
   try {
