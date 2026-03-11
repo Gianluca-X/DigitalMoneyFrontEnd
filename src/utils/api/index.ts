@@ -31,10 +31,10 @@ const request = async (
   }
 
   if (!response.ok) {
-    throw {
-      status: response.status,
-      data,
-    };
+ throw new Error(JSON.stringify({
+  status: response.status,
+  data,
+}));
   }
 
   return data;
