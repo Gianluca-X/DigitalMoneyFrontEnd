@@ -8,6 +8,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import Dashboard from './pages/Dashboard';
 import { useAuth } from './hooks';
 
+
 // pages
 const Login = React.lazy(() => import('./pages/Login'));
 const Register = React.lazy(() => import('./pages/Register'));
@@ -18,6 +19,7 @@ const SendMoney = React.lazy(() => import('./pages/SendMoney'));
 const LoadMoney = React.lazy(() => import('./pages/LoadMoney'));
 const Profile = React.lazy(() => import('./pages/Profile'));
 const PageNotFound = React.lazy(() => import('./pages/PageNotFound'));
+const VerifyEmail = React.lazy(() => import('./pages/VerifyEmail'));
 
 function App() {
   const { isAuthenticated } = useAuth();
@@ -47,6 +49,7 @@ function App() {
                   path={ROUTES.ACTIVITY_DETAILS}
                 />
               </Route>
+              <Route path={ROUTES.VERIFY_EMAIL} element={<VerifyEmail />} />
               <Route
                 element={
                   isAuthenticated ? (

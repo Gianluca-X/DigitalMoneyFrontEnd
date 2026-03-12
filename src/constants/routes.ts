@@ -9,6 +9,7 @@ export const ROUTES = {
   SEND_MONEY: '/send-money',
   CARDS: '/cards',
   NOT_FOUND: '/404',
+  VERIFY_EMAIL: '/verify-email',
 };
 
 export const LINK_LIST = [
@@ -39,5 +40,9 @@ export const LINK_LIST = [
   {
     name: 'Cerrar Sesión',
     href: ROUTES.LOGIN,
+  },
+  {
+    name: 'Verificar Email',
+    href: ROUTES.VERIFY_EMAIL,
   }
 ];

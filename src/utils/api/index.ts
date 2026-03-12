@@ -45,7 +45,8 @@ export const login = (email: string, password: string) =>
 
 export const logout = (token: string) => request('/auth/logout', 'POST', token);
 /** ------------------ AUTH EXTRA ------------------ */
-
+export const verifyEmail = (code: string) =>
+  request(`/auth/verify?code=${code}`, 'GET');
 // Reenviar código de verificación
 export const resendVerification = (email: string) =>
   request('/auth/resend-verification', 'POST', undefined, { email });
