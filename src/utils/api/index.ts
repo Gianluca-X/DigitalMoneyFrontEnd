@@ -98,9 +98,18 @@ export const getUserActivity = async (
   token: string
 ) => {
   const activities = await getUserActivities(accountId, token);
-  return activities.find((a: any) => a.id === activityId);
-};
 
+  const activity = activities.find((a: any) => a.id === Number(activityId));
+
+  if (!activity) return null;
+
+  return {
+    ...activity,
+    name: activity.description,
+    dated: activity.date,
+    destination: activity.destination || "",
+  };
+};
 // Tarjetas del usuario
 export const getUserCards = (accountId: string, token: string) =>
   request(`/accounts/${accountId}/cards`, 'GET', token);
