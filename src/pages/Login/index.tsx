@@ -86,7 +86,8 @@ const [token, setToken] = useLocalStorage('token');
         setTimeout(() => {
           setIsSubmiting(false);          
           setIsAuthenticated(true);
-          navigate("/");
+          navigate("/", { replace: true });
+          window.location.reload();
          },0);
         })
       .catch((error) => {
