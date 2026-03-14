@@ -40,9 +40,5 @@ export const LINK_LIST = [
   {
     name: 'Cerrar Sesión',
     href: ROUTES.LOGIN,
-  },
-  {
-    name: 'Verificar Email',
-    href: ROUTES.VERIFY_EMAIL,
   }
 ];

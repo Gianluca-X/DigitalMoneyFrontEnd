@@ -693,6 +693,10 @@ label {
   height: 2.5rem;
 }
 
+#root .tw-h-screen {
+  height: 100vh;
+}
+
 #root .tw-w-full {
   width: 100%;
 }
@@ -776,6 +780,10 @@ label {
 
 #root .tw-gap-4 {
   gap: 1rem;
+}
+
+#root .tw-gap-6 {
+  gap: 1.5rem;
 }
 
 #root .tw-gap-y-4 {
@@ -933,6 +941,10 @@ label {
 
 #root .tw-text-xl {
   font-size: var(--xl);
+}
+
+#root .tw-text-2xl {
+  font-size: var(--2xl);
 }
 
 #root .tw-font-bold {
