@@ -53,10 +53,6 @@ const UserInfoProvider = ({ children }: { children: React.ReactNode }) => {
       });
     })
     .catch((error) => {
-      dispatch({
-        type: userActionTypes.SET_USER_LOADING,
-        payload: false,
-      });
       if (error.status === UNAUTHORIZED) {
         setToken(null);
         setIsAuthenticated(false);
