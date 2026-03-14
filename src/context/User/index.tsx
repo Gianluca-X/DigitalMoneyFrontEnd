@@ -31,8 +31,15 @@ const UserInfoProvider = ({ children }: { children: React.ReactNode }) => {
   const { setIsAuthenticated } = useAuth();
 
     useEffect(() => {
+
   if (!token) {
     setIsAuthenticated(false);
+
+    dispatch({
+      type: userActionTypes.SET_USER_LOADING,
+      payload: false,
+    });
+
     return;
   }
 
@@ -41,26 +48,48 @@ const UserInfoProvider = ({ children }: { children: React.ReactNode }) => {
 
   if (!userId) {
     setIsAuthenticated(false);
+
+    dispatch({
+      type: userActionTypes.SET_USER_LOADING,
+      payload: false,
+    });
+
     return;
   }
 
   getUser(userId, token)
     .then((res) => {
-      dispatch({ type: userActionTypes.SET_USER, payload: res });
+
+      dispatch({
+        type: userActionTypes.SET_USER,
+        payload: res,
+      });
+
       dispatch({
         type: userActionTypes.SET_USER_LOADING,
         payload: false,
       });
+
+      setIsAuthenticated(true);
+
     })
     .catch((error) => {
+
+      dispatch({
+        type: userActionTypes.SET_USER_LOADING,
+        payload: false,
+      });
+
       if (error.status === UNAUTHORIZED) {
         setToken(null);
         setIsAuthenticated(false);
       }
+
       console.log(error);
     });
 
-}, [token, setIsAuthenticated, setToken]);
+}, [token]);
+
 
   return (
     <userInfoContext.Provider
