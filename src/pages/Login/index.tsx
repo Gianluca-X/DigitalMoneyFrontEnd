@@ -83,12 +83,10 @@ const [token, setToken] = useLocalStorage('token');
     login(email, password)
       .then((response) => {
         setToken(response.token);
-        setTimeout(() => {
-          setIsSubmiting(false);
           setIsAuthenticated(true);
+          setIsSubmiting(false);          
           navigate("/");
-        },0);
-      })
+        })
       .catch((error) => {
       setIsSubmiting(false);
 
