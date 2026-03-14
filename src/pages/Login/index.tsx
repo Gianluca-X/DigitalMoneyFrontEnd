@@ -83,8 +83,8 @@ const [token, setToken] = useLocalStorage('token');
     login(email, password)
       .then((response) => {
         setToken(response.token);
-          setIsAuthenticated(true);
           setIsSubmiting(false);          
+          setIsAuthenticated(true);
           navigate("/");
         })
       .catch((error) => {
