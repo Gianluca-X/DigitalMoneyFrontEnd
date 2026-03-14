@@ -85,7 +85,9 @@ const [token, setToken] = useLocalStorage('token');
         setToken(response.token);
           setIsSubmiting(false);          
           setIsAuthenticated(true);
-          navigate("/");
+         setTimeout(() => {
+          navigate('/')
+         },0);
         })
       .catch((error) => {
       setIsSubmiting(false);
